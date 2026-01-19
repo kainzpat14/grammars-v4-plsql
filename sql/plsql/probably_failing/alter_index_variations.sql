@@ -1,0 +1,428 @@
+-- ALTER INDEX statement variations
+-- Tests ALTER INDEX with various operations and options
+
+-- ALTER INDEX REBUILD
+ALTER INDEX emp_name_idx REBUILD;
+
+-- ALTER INDEX REBUILD ONLINE
+ALTER INDEX emp_salary_idx REBUILD ONLINE;
+
+-- ALTER INDEX REBUILD with PARALLEL
+ALTER INDEX emp_large_idx REBUILD PARALLEL 4;
+
+-- ALTER INDEX REBUILD with NOLOGGING
+ALTER INDEX emp_fast_rebuild_idx REBUILD NOLOGGING;
+
+-- ALTER INDEX REBUILD with TABLESPACE
+ALTER INDEX emp_idx REBUILD TABLESPACE new_tablespace;
+
+-- ALTER INDEX REBUILD with COMPUTE STATISTICS
+ALTER INDEX emp_stats_idx REBUILD COMPUTE STATISTICS;
+
+-- ALTER INDEX REBUILD with PCTFREE
+ALTER INDEX emp_idx REBUILD PCTFREE 10;
+
+-- ALTER INDEX REBUILD with INITRANS
+ALTER INDEX emp_idx REBUILD INITRANS 4;
+
+-- ALTER INDEX REBUILD with STORAGE
+ALTER INDEX emp_idx REBUILD
+STORAGE (INITIAL 2M NEXT 2M);
+
+-- ALTER INDEX REBUILD with COMPRESS
+ALTER INDEX emp_composite_idx REBUILD COMPRESS 2;
+
+-- ALTER INDEX REBUILD with NOCOMPRESS
+ALTER INDEX emp_compressed_idx REBUILD NOCOMPRESS;
+
+-- ALTER INDEX REBUILD with REVERSE
+ALTER INDEX emp_idx REBUILD REVERSE;
+
+-- ALTER INDEX REBUILD with NOREVERSE
+ALTER INDEX emp_reverse_idx REBUILD NOREVERSE;
+
+-- ALTER INDEX COALESCE
+ALTER INDEX emp_idx COALESCE;
+
+-- ALTER INDEX RENAME TO
+ALTER INDEX emp_old_name_idx RENAME TO emp_new_name_idx;
+
+-- ALTER INDEX MONITORING USAGE
+ALTER INDEX emp_idx MONITORING USAGE;
+
+-- ALTER INDEX NOMONITORING USAGE
+ALTER INDEX emp_idx NOMONITORING USAGE;
+
+-- ALTER INDEX VISIBLE (11g+)
+ALTER INDEX emp_invisible_idx VISIBLE;
+
+-- ALTER INDEX INVISIBLE (11g+)
+ALTER INDEX emp_visible_idx INVISIBLE;
+
+-- ALTER INDEX UNUSABLE
+ALTER INDEX emp_idx UNUSABLE;
+
+-- ALTER INDEX REBUILD to make usable again
+ALTER INDEX emp_unusable_idx REBUILD;
+
+-- ALTER INDEX for partitioned index - REBUILD PARTITION
+ALTER INDEX sales_part_idx REBUILD PARTITION sales_2023;
+
+-- ALTER INDEX REBUILD PARTITION with PARALLEL
+ALTER INDEX sales_part_idx REBUILD PARTITION sales_2024 PARALLEL 4;
+
+-- ALTER INDEX REBUILD PARTITION with TABLESPACE
+ALTER INDEX sales_part_idx REBUILD PARTITION sales_2023 TABLESPACE part_ts;
+
+-- ALTER INDEX MODIFY PARTITION
+ALTER INDEX sales_idx MODIFY PARTITION sales_2023 UNUSABLE;
+
+-- ALTER INDEX MODIFY PARTITION USABLE
+ALTER INDEX sales_idx MODIFY PARTITION sales_2023 USABLE;
+
+-- ALTER INDEX ADD PARTITION
+ALTER INDEX sales_global_idx ADD PARTITION sales_2025
+VALUES LESS THAN (TO_DATE('2026-01-01', 'YYYY-MM-DD'));
+
+-- ALTER INDEX DROP PARTITION
+ALTER INDEX sales_global_idx DROP PARTITION sales_2020;
+
+-- ALTER INDEX SPLIT PARTITION
+ALTER INDEX sales_idx SPLIT PARTITION sales_2024
+AT (TO_DATE('2024-07-01', 'YYYY-MM-DD'))
+INTO (
+    PARTITION sales_2024_h1,
+    PARTITION sales_2024_h2
+);
+
+-- ALTER INDEX MERGE PARTITIONS
+ALTER INDEX sales_idx MERGE PARTITIONS sales_2024_h1, sales_2024_h2
+INTO PARTITION sales_2024;
+
+-- ALTER INDEX RENAME PARTITION
+ALTER INDEX sales_idx RENAME PARTITION sales_2023 TO sales_2023_final;
+
+-- ALTER INDEX MODIFY DEFAULT ATTRIBUTES
+ALTER INDEX sales_local_idx MODIFY DEFAULT ATTRIBUTES
+TABLESPACE default_ts;
+
+-- ALTER INDEX MODIFY DEFAULT ATTRIBUTES with COMPRESS
+ALTER INDEX sales_local_idx MODIFY DEFAULT ATTRIBUTES
+COMPRESS 1;
+
+-- ALTER INDEX UPDATE BLOCK REFERENCES
+ALTER INDEX emp_idx UPDATE BLOCK REFERENCES;
+
+-- ALTER INDEX REBUILD ONLINE with PARALLEL
+ALTER INDEX emp_big_idx REBUILD ONLINE PARALLEL 8;
+
+-- ALTER INDEX SHRINK SPACE (11g+)
+ALTER INDEX emp_idx SHRINK SPACE;
+
+-- ALTER INDEX SHRINK SPACE COMPACT
+ALTER INDEX emp_idx SHRINK SPACE COMPACT;
+
+-- ALTER INDEX SHRINK SPACE CASCADE
+ALTER INDEX emp_idx SHRINK SPACE CASCADE;
+
+-- ALTER INDEX deallocate unused space
+ALTER INDEX emp_idx DEALLOCATE UNUSED;
+
+-- ALTER INDEX deallocate unused space with KEEP
+ALTER INDEX emp_idx DEALLOCATE UNUSED KEEP 1M;
+
+-- ALTER INDEX allocate extent
+ALTER INDEX emp_idx ALLOCATE EXTENT;
+
+-- ALTER INDEX allocate extent with SIZE
+ALTER INDEX emp_idx ALLOCATE EXTENT (SIZE 1M);
+
+-- ALTER INDEX allocate extent with DATAFILE
+ALTER INDEX emp_idx ALLOCATE EXTENT (SIZE 1M DATAFILE '/u01/oradata/file.dbf');
+
+-- ALTER INDEX REBUILD REVERSE
+ALTER INDEX emp_standard_idx REBUILD REVERSE;
+
+-- ALTER INDEX REBUILD NOREVERSE (convert back)
+ALTER INDEX emp_reverse_idx REBUILD NOREVERSE;
+
+-- ALTER INDEX for bitmap index
+ALTER INDEX emp_bitmap_idx REBUILD;
+
+-- ALTER INDEX for function-based index
+ALTER INDEX emp_upper_name_idx REBUILD;
+
+-- ALTER INDEX for domain index (text index)
+ALTER INDEX emp_text_idx REBUILD;
+
+-- ALTER INDEX SYNC (for domain indexes)
+ALTER INDEX emp_text_idx REBUILD PARAMETERS('SYNC');
+
+-- ALTER INDEX OPTIMIZE (for domain indexes)
+ALTER INDEX emp_text_idx REBUILD PARAMETERS('OPTIMIZE FULL');
+
+-- ALTER INDEX for XML index
+ALTER INDEX xml_doc_idx REBUILD;
+
+-- ALTER INDEX PARAMETERS for domain index
+ALTER INDEX emp_ctx_idx REBUILD PARAMETERS('REPLACE LEXER my_lexer');
+
+-- ALTER INDEX enable parallel DML
+ALTER INDEX emp_idx PARALLEL 4;
+
+-- ALTER INDEX disable parallel
+ALTER INDEX emp_idx NOPARALLEL;
+
+-- ALTER INDEX change degree of parallelism
+ALTER INDEX emp_idx PARALLEL (DEGREE 8);
+
+-- ALTER INDEX LOGGING
+ALTER INDEX emp_nologging_idx LOGGING;
+
+-- ALTER INDEX NOLOGGING
+ALTER INDEX emp_logging_idx NOLOGGING;
+
+-- ALTER INDEX modify physical attributes
+ALTER INDEX emp_idx
+PCTFREE 20
+PCTUSED 40
+INITRANS 2
+MAXTRANS 255;
+
+-- ALTER INDEX modify BUFFER_POOL
+ALTER INDEX emp_idx STORAGE (BUFFER_POOL KEEP);
+
+-- ALTER INDEX modify BUFFER_POOL to RECYCLE
+ALTER INDEX emp_idx STORAGE (BUFFER_POOL RECYCLE);
+
+-- ALTER INDEX modify BUFFER_POOL to DEFAULT
+ALTER INDEX emp_idx STORAGE (BUFFER_POOL DEFAULT);
+
+-- ALTER INDEX REBUILD with key compression
+ALTER INDEX emp_dept_job_idx REBUILD COMPRESS 1;
+
+-- ALTER INDEX REBUILD with advanced compression (12c+)
+ALTER INDEX emp_comp_idx REBUILD COMPRESS ADVANCED LOW;
+
+-- ALTER INDEX REBUILD with advanced compression HIGH
+ALTER INDEX emp_comp_idx REBUILD COMPRESS ADVANCED HIGH;
+
+-- ALTER INDEX for local partitioned index - REBUILD all partitions
+ALTER INDEX sales_local_idx REBUILD;
+
+-- ALTER INDEX for global partitioned index
+ALTER INDEX sales_global_idx REBUILD;
+
+-- ALTER INDEX MODIFY PARTITION PARAMETERS (for domain indexes)
+ALTER INDEX text_idx MODIFY PARTITION text_part1
+PARAMETERS('SYNC');
+
+-- ALTER INDEX REBUILD PARTITION ONLINE
+ALTER INDEX sales_idx REBUILD PARTITION sales_2024 ONLINE;
+
+-- ALTER INDEX REBUILD PARTITION with NOLOGGING
+ALTER INDEX sales_idx REBUILD PARTITION sales_2024 NOLOGGING;
+
+-- ALTER INDEX REBUILD PARTITION with PARALLEL and NOLOGGING
+ALTER INDEX sales_idx REBUILD PARTITION sales_2023
+PARALLEL 4 NOLOGGING;
+
+-- ALTER INDEX COALESCE CLEANUP (11g+)
+ALTER INDEX emp_idx COALESCE CLEANUP;
+
+-- ALTER INDEX for invisible/visible toggle
+ALTER INDEX emp_test_idx INVISIBLE;
+ALTER INDEX emp_test_idx VISIBLE;
+
+-- ALTER INDEX for monitoring toggle
+ALTER INDEX emp_idx MONITORING USAGE;
+ALTER INDEX emp_idx NOMONITORING USAGE;
+
+-- ALTER INDEX with new tablespace and rebuild
+ALTER INDEX emp_idx REBUILD
+TABLESPACE new_ts
+PARALLEL 4
+ONLINE
+NOLOGGING;
+
+-- ALTER INDEX REBUILD all options
+ALTER INDEX emp_comprehensive_idx REBUILD
+TABLESPACE index_ts
+PCTFREE 5
+INITRANS 4
+STORAGE (INITIAL 2M NEXT 2M)
+COMPRESS 2
+NOLOGGING
+PARALLEL 8
+ONLINE
+COMPUTE STATISTICS;
+
+-- ALTER INDEX MODIFY PARTITION unusable
+ALTER INDEX sales_local_idx MODIFY PARTITION p1 UNUSABLE;
+
+-- ALTER INDEX REBUILD PARTITION to make usable
+ALTER INDEX sales_local_idx REBUILD PARTITION p1;
+
+-- ALTER INDEX REBUILD SUBPARTITION
+ALTER INDEX sales_subpart_idx REBUILD SUBPARTITION sp1;
+
+-- ALTER INDEX MODIFY SUBPARTITION
+ALTER INDEX sales_subpart_idx MODIFY SUBPARTITION sp1 UNUSABLE;
+
+-- ALTER INDEX for interval partitioned table
+ALTER INDEX interval_idx REBUILD;
+
+-- ALTER INDEX for reference partitioned table
+ALTER INDEX ref_idx REBUILD;
+
+-- ALTER INDEX TRUNCATE PARTITION (drops all data, keeps structure)
+ALTER INDEX sales_idx REBUILD PARTITION sales_old;
+
+-- ALTER INDEX EXCHANGE PARTITION (with table)
+-- This is actually done at table level, but affects indexes
+-- ALTER TABLE sales EXCHANGE PARTITION p1 WITH TABLE sales_archive;
+
+-- ALTER INDEX rebuild with optimizer statistics
+ALTER INDEX emp_idx REBUILD COMPUTE STATISTICS;
+
+-- ALTER INDEX rebuild without statistics
+ALTER INDEX emp_idx REBUILD;
+
+-- ALTER INDEX DEFERRED INVALIDATION (12c+)
+ALTER INDEX emp_idx DEFERRED INVALIDATION;
+
+-- ALTER INDEX modify to visible for optimizer
+ALTER INDEX emp_hidden_idx VISIBLE;
+
+-- ALTER INDEX modify storage for partition
+ALTER INDEX sales_idx MODIFY PARTITION p1
+STORAGE (INITIAL 5M NEXT 5M);
+
+-- ALTER INDEX rebuild with different block size
+-- Requires tablespace with appropriate block size
+ALTER INDEX emp_idx REBUILD TABLESPACE ts_16k;
+
+-- ALTER INDEX for securefile LOB storage
+ALTER INDEX lob_idx REBUILD;
+
+-- ALTER INDEX rebuild bitmap index
+ALTER BITMAP INDEX emp_dept_bitmap REBUILD;
+
+-- ALTER INDEX rebuild bitmap join index
+ALTER BITMAP INDEX sales_bji REBUILD;
+
+-- ALTER INDEX convert to/from compressed
+ALTER INDEX emp_idx REBUILD NOCOMPRESS;
+ALTER INDEX emp_idx REBUILD COMPRESS 2;
+
+-- ALTER INDEX to change compression level
+ALTER INDEX emp_comp_idx REBUILD COMPRESS 1;  -- was COMPRESS 2
+
+-- ALTER INDEX rebuild with NOSORT (data already sorted)
+ALTER INDEX emp_presorted_idx REBUILD NOSORT;
+
+-- ALTER INDEX for spatial index
+ALTER INDEX location_spatial_idx REBUILD;
+
+-- ALTER INDEX for spatial index with parameters
+ALTER INDEX spatial_idx REBUILD PARAMETERS('SDO_COMMIT_INTERVAL=1000');
+
+-- ALTER INDEX for text index - sync
+ALTER INDEX text_idx REBUILD PARAMETERS('SYNC');
+
+-- ALTER INDEX for text index - optimize
+ALTER INDEX text_idx REBUILD PARAMETERS('OPTIMIZE FULL');
+
+-- ALTER INDEX for text index - rebuild with new preferences
+ALTER INDEX text_idx REBUILD PARAMETERS('REPLACE LEXER new_lexer');
+
+-- ALTER INDEX for JSON search index
+ALTER INDEX json_search_idx REBUILD;
+
+-- ALTER INDEX REBUILD partition in parallel with online
+ALTER INDEX sales_part_idx REBUILD PARTITION p2024_q1
+ONLINE PARALLEL 4;
+
+-- ALTER INDEX modify multiple partitions
+ALTER INDEX sales_idx MODIFY PARTITION p1 UNUSABLE;
+ALTER INDEX sales_idx MODIFY PARTITION p2 UNUSABLE;
+ALTER INDEX sales_idx MODIFY PARTITION p3 UNUSABLE;
+
+-- ALTER INDEX rebuild all unusable partitions
+ALTER INDEX sales_idx REBUILD PARTITION p1;
+ALTER INDEX sales_idx REBUILD PARTITION p2;
+ALTER INDEX sales_idx REBUILD PARTITION p3;
+
+-- ALTER INDEX for virtual column index
+ALTER INDEX emp_virtual_col_idx REBUILD;
+
+-- ALTER INDEX move to new tablespace with all options
+ALTER INDEX emp_idx REBUILD
+TABLESPACE new_tablespace
+ONLINE
+PARALLEL 4
+NOLOGGING
+COMPUTE STATISTICS
+COMPRESS 1;
+
+-- ALTER INDEX for descending index
+ALTER INDEX emp_desc_idx REBUILD;
+
+-- ALTER INDEX for function-based index rebuild
+ALTER INDEX emp_func_idx REBUILD
+COMPUTE STATISTICS;
+
+-- ALTER INDEX for unique index
+ALTER INDEX emp_unique_idx REBUILD;
+
+-- ALTER INDEX coalesce for space management
+ALTER INDEX emp_idx COALESCE;
+
+-- ALTER INDEX update block references after ROWID changes
+ALTER INDEX emp_idx UPDATE BLOCK REFERENCES;
+
+-- ALTER INDEX deallocate unused with KEEP minimum
+ALTER INDEX emp_idx DEALLOCATE UNUSED KEEP 100K;
+
+-- ALTER INDEX rebuild with maximum parallelism
+ALTER INDEX emp_very_large_idx REBUILD PARALLEL (DEGREE DEFAULT);
+
+-- ALTER INDEX rebuild with specified parallelism
+ALTER INDEX emp_idx REBUILD PARALLEL (DEGREE 16 INSTANCES 2);
+
+-- ALTER INDEX disable parallelism after rebuild
+ALTER INDEX emp_idx NOPARALLEL;
+
+-- ALTER INDEX for MONITORING to check usage
+ALTER INDEX rarely_used_idx MONITORING USAGE;
+
+-- Check index usage after monitoring period
+-- SELECT * FROM V$OBJECT_USAGE WHERE INDEX_NAME = 'RARELY_USED_IDX';
+
+-- ALTER INDEX stop monitoring
+ALTER INDEX rarely_used_idx NOMONITORING USAGE;
+
+-- ALTER INDEX mark as invisible to test query performance
+ALTER INDEX test_idx INVISIBLE;
+
+-- Revert to visible after testing
+ALTER INDEX test_idx VISIBLE;
+
+-- ALTER INDEX rebuild all partitions of local index
+ALTER INDEX sales_local_idx REBUILD;
+
+-- ALTER INDEX with specific partition rebuild options
+ALTER INDEX sales_idx REBUILD PARTITION p2024
+TABLESPACE part_ts_2024
+PARALLEL 4
+ONLINE;
+
+-- ALTER INDEX compress all partitions
+ALTER INDEX sales_idx MODIFY DEFAULT ATTRIBUTES COMPRESS 2;
+
+-- ALTER INDEX set different compression per partition
+ALTER INDEX sales_idx REBUILD PARTITION p1 COMPRESS 1;
+ALTER INDEX sales_idx REBUILD PARTITION p2 COMPRESS 2;
+
+-- ALTER INDEX for interval partition (auto-created partitions)
+ALTER INDEX interval_part_idx REBUILD;
