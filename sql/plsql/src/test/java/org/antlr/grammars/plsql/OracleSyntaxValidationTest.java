@@ -2,6 +2,7 @@ package org.antlr.grammars.plsql;
 
 import org.junit.jupiter.api.*;
 import org.testcontainers.containers.OracleContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
@@ -15,6 +16,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -28,9 +30,9 @@ import java.util.stream.Collectors;
 public class OracleSyntaxValidationTest {
 
     @Container
-    private static final OracleContainer oracleContainer = new OracleContainer(
-            DockerImageName.parse("gvenzl/oracle-free:23.5-slim")
-    ).withReuse(false);
+    private static final OracleContainer oracleContainer = new OracleContainer("gvenzl/oracle-xe:18-slim")
+            .withReuse(false)
+            .withStartupTimeout(Duration.ofMinutes(10));
 
     private static Connection connection;
     private static final String PROBABLY_FAILING_DIR = "probably_failing";
@@ -221,6 +223,12 @@ public class OracleSyntaxValidationTest {
                 "  v_cursor := DBMS_SQL.OPEN_CURSOR; " +
                 "  DBMS_SQL.PARSE(v_cursor, ?, DBMS_SQL.NATIVE); " +
                 "  DBMS_SQL.CLOSE_CURSOR(v_cursor); " +
+                "EXCEPTION " +
+                "  WHEN OTHERS THEN " +
+                "    IF DBMS_SQL.IS_OPEN(v_cursor) THEN " +
+                "      DBMS_SQL.CLOSE_CURSOR(v_cursor); " +
+                "    END IF; " +
+                "    RAISE; " +
                 "END;";
         
         try (var pstmt = connection.prepareStatement(validationSql)) {
