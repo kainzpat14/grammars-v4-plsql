@@ -1,11 +1,9 @@
 package org.antlr.grammars.plsql;
 
 import org.junit.jupiter.api.*;
-import org.testcontainers.containers.OracleContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.oracle.OracleContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,9 +29,8 @@ import java.util.stream.Collectors;
 public class OracleSyntaxValidationTest {
 
     @Container
-    private static final OracleContainer oracleContainer = new OracleContainer("gvenzl/oracle-xe:18-slim")
-            .withReuse(false)
-            .withStartupTimeout(Duration.ofMinutes(10));
+    private static final OracleContainer oracleContainer = new OracleContainer("gvenzl/oracle-free:23-slim")
+            .withReuse(false);
 
     private static Connection connection;
     private static final String PROBABLY_FAILING_DIR = "probably_failing";
@@ -44,56 +41,14 @@ public class OracleSyntaxValidationTest {
     private static final String ORA_INSUFFICIENT_PRIVILEGES = "ORA-01031";
     private static final String ORA_ROLE_NOT_EXIST = "ORA-01919";
     
-    // Oracle error codes that indicate acceptable failures (privilege/edition issues)
+    // Oracle error codes that indicate acceptable failures (ONLY privilege/edition issues)
     private static final Set<String> ACCEPTABLE_ERROR_PREFIXES = Set.of(
         "ORA-01031", // insufficient privileges
         "ORA-28447", // insufficient privilege for ALTER DATABASE DICTIONARY
-        "ORA-00939", // too many arguments (Enterprise Edition feature)
         "ORA-65040", // operation not allowed from within pluggable database
-        "ORA-00922", // missing or invalid option (often EE feature)
-        "ORA-02260", // table can have only one primary key (EE feature usage)
-        "ORA-38301", // flashback requires Enterprise Edition
-        "ORA-00940", // invalid ALTER command (often version-specific or EE)
         "ORA-65090", // operation not allowed on a pluggable database container
-        "ORA-65011", // Pluggable database does not exist
-        "ORA-02221", // VALIDATE option not allowed (often for partitions)
-        "ORA-14511", // cannot perform operation on online partition
-        "ORA-38104", // Columns referenced in the ON DELETE clause cannot be updated
-        "ORA-00942", // table or view does not exist (for objects not created)
-        "ORA-02430", // cannot enable constraint - object may not exist
-        "ORA-01418", // specified index does not exist
-        "ORA-02289", // sequence does not exist
-        "ORA-04043", // object does not exist (views, etc.)
-        "ORA-65048", // operation is not valid for a pluggable database
-        "ORA-12545", // Connect failed because target host or object does not exist
-        "ORA-02439", // unique or primary key constraint violated
-        "ORA-00959", // tablespace does not exist
-        "ORA-14050", // invalid ALTER INDEX MODIFY PARTITION option (version-specific)
-        "ORA-02243", // invalid ALTER INDEX or ALTER MATERIALIZED VIEW option (version-specific)
-        "ORA-10638", // Index status is invalid
-        "ORA-02203", // INITIAL storage options not allowed
-        "ORA-25194", // invalid COMPRESS prefix length value
-        "ORA-14010", // this physical attribute may not be specified for an index partition
-        "ORA-29833", // indextype does not exist
-        "ORA-65177", // FLEX must be specified for flexible data types (23ai feature)
-        "ORA-65178", // invalid  use of SQL DOMAIN
-        "ORA-43856", // invalid JSON relational duality view
-        "ORA-40346", // ML model does not exist
-        "ORA-40347", // Cannot drop ML model
-        "ORA-29538", // Java not installed
-        "ORA-06550", // PL/SQL compilation error (often version-specific features)
-        "ORA-00900", // invalid SQL statement (version-specific features)
-        "ORA-14074", // partition bound must collate higher than the previous partition
-        "ORA-01747", // invalid user.table.column, table.column, or column specification
-        "ORA-14308", // partition/subpartition bound element must be of type...
-        "ORA-02000", // missing keyword
-        "ORA-17008", // Closed connection (database crashed/closed)
-        "ORA-03113", // database connection closed by peer
         "ORA-65118", // operation affecting a pluggable database cannot be performed from another pluggable database
-        "ORA-04007", // MINVALUE cannot be made to exceed the current value
-        "ORA-65110", // Invalid instance name specified
-        "ORA-02286", // no options specified for ALTER SEQUENCE
-        "ORA-29841"  // invalid option for ALTER INDEXTYPE
+        "ORA-38301"  // flashback requires Enterprise Edition
     );
 
     @BeforeAll
@@ -331,7 +286,7 @@ public class OracleSyntaxValidationTest {
     }
 
     /**
-     * Check if an error is acceptable (privilege or edition limitation)
+     * Check if an error is acceptable (privilege or edition limitation ONLY)
      */
     private boolean isAcceptableError(SQLException e) {
         String message = e.getMessage();
@@ -346,15 +301,12 @@ public class OracleSyntaxValidationTest {
             }
         }
         
-        // Check for specific error messages indicating privilege/edition issues
+        // Check for specific error messages indicating privilege/edition issues ONLY
         String lowerMessage = message.toLowerCase();
         return lowerMessage.contains("insufficient privilege") ||
                lowerMessage.contains("enterprise edition") ||
                lowerMessage.contains("requires enterprise") ||
-               lowerMessage.contains("not allowed from within pluggable") ||
-               lowerMessage.contains("invalid datatype") || // Often 23ai datatypes like JSON, VECTOR
-               lowerMessage.contains("sql command not properly ended") || // Often version-specific syntax
-               lowerMessage.contains("missing right parenthesis"); // Often version-specific syntax
+               lowerMessage.contains("not allowed from within pluggable");
     }
 
     /**
