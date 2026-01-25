@@ -328,16 +328,24 @@ public class OracleSyntaxValidationTest {
 
     /**
      * Split SQL file content into individual statements
+     * Handles:
+     * - Semicolon-terminated statements
+     * - Slash-terminated statements (PL/SQL blocks, MLE modules)
+     * - Does not split within JavaScript blocks (MLE) or PL/SQL blocks
      */
     private List<String> splitSqlStatements(String content) {
         List<String> statements = new ArrayList<>();
         StringBuilder currentStatement = new StringBuilder();
         boolean inComment = false;
         boolean inString = false;
+        boolean inJavaScriptBlock = false;
+        boolean inPlSqlBlock = false;
+        int plsqlDepth = 0; // Track nested BEGIN/END blocks
         
         String[] lines = content.split("\n");
         for (String line : lines) {
             String trimmedLine = line.trim();
+            String upperLine = trimmedLine.toUpperCase();
             
             // Skip pure comment lines
             if (trimmedLine.startsWith("--")) {
@@ -360,12 +368,52 @@ public class OracleSyntaxValidationTest {
             int commentPos = line.indexOf("--");
             if (commentPos >= 0 && !isInString(line, commentPos)) {
                 line = line.substring(0, commentPos);
+                trimmedLine = line.trim();
+                upperLine = trimmedLine.toUpperCase();
+            }
+            
+            // Detect JavaScript blocks in MLE modules
+            if (upperLine.contains("LANGUAGE") && upperLine.contains("JAVASCRIPT") && upperLine.contains("AS")) {
+                inJavaScriptBlock = true;
+            }
+            
+            // Detect PL/SQL blocks
+            if (upperLine.startsWith("BEGIN") || upperLine.startsWith("DECLARE")) {
+                inPlSqlBlock = true;
+                plsqlDepth = 1;
+            } else if (inPlSqlBlock) {
+                // Count BEGIN/END nesting
+                if (upperLine.contains("BEGIN")) {
+                    plsqlDepth++;
+                }
+                if (upperLine.contains("END;") || upperLine.equals("END")) {
+                    plsqlDepth--;
+                    if (plsqlDepth == 0) {
+                        inPlSqlBlock = false;
+                    }
+                }
             }
             
             currentStatement.append(line).append("\n");
             
-            // Check if statement ends with semicolon
-            if (trimmedLine.endsWith(";")) {
+            // Check for statement terminator
+            // 1. Slash on its own line terminates JavaScript blocks and PL/SQL blocks
+            if (trimmedLine.equals("/")) {
+                inJavaScriptBlock = false;
+                inPlSqlBlock = false;
+                plsqlDepth = 0;
+                String stmt = currentStatement.toString().trim();
+                if (!stmt.isEmpty() && !stmt.equals("/")) {
+                    // Remove trailing slash
+                    if (stmt.endsWith("/")) {
+                        stmt = stmt.substring(0, stmt.length() - 1).trim();
+                    }
+                    statements.add(stmt);
+                }
+                currentStatement = new StringBuilder();
+            }
+            // 2. Semicolon terminates regular SQL statements (but not within JS/PL SQL blocks)
+            else if (trimmedLine.endsWith(";") && !inJavaScriptBlock && !inPlSqlBlock) {
                 String stmt = currentStatement.toString().trim();
                 if (!stmt.isEmpty()) {
                     // Remove trailing semicolon
@@ -380,11 +428,16 @@ public class OracleSyntaxValidationTest {
         
         // Add any remaining statement
         String stmt = currentStatement.toString().trim();
-        if (!stmt.isEmpty()) {
+        if (!stmt.isEmpty() && !stmt.equals("/")) {
             if (stmt.endsWith(";")) {
                 stmt = stmt.substring(0, stmt.length() - 1).trim();
             }
-            statements.add(stmt);
+            if (stmt.endsWith("/")) {
+                stmt = stmt.substring(0, stmt.length() - 1).trim();
+            }
+            if (!stmt.isEmpty()) {
+                statements.add(stmt);
+            }
         }
         
         return statements;
