@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Duration;
@@ -37,6 +38,11 @@ public class OracleSyntaxValidationTest {
     private static Connection connection;
     private static final String PROBABLY_FAILING_DIR = "probably_failing";
     private static final Map<String, ValidationResult> results = new LinkedHashMap<>();
+    
+    // Oracle error codes for prerequisite creation
+    private static final String ORA_NAME_ALREADY_USED = "ORA-00955";
+    private static final String ORA_INSUFFICIENT_PRIVILEGES = "ORA-01031";
+    private static final String ORA_ROLE_NOT_EXIST = "ORA-01919";
 
     @BeforeAll
     public static void setUp() throws SQLException {
@@ -129,9 +135,9 @@ public class OracleSyntaxValidationTest {
                     System.out.println("Created prerequisite: " + sql.substring(0, Math.min(50, sql.length())) + "...");
                 } catch (SQLException e) {
                     // Ignore errors for objects that already exist or can't be created
-                    if (!e.getMessage().contains("ORA-00955") && // name already used
-                        !e.getMessage().contains("ORA-01031") && // insufficient privileges
-                        !e.getMessage().contains("ORA-01919")) { // role does not exist
+                    if (!e.getMessage().contains(ORA_NAME_ALREADY_USED) && // name already used
+                        !e.getMessage().contains(ORA_INSUFFICIENT_PRIVILEGES) && // insufficient privileges
+                        !e.getMessage().contains(ORA_ROLE_NOT_EXIST)) { // role does not exist
                         System.err.println("Warning creating prerequisite: " + e.getMessage());
                     }
                 }
@@ -231,7 +237,7 @@ public class OracleSyntaxValidationTest {
                 "    RAISE; " +
                 "END;";
         
-        try (var pstmt = connection.prepareStatement(validationSql)) {
+        try (PreparedStatement pstmt = connection.prepareStatement(validationSql)) {
             pstmt.setString(1, statement);
             pstmt.execute();
         }
