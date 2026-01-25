@@ -41,14 +41,39 @@ public class OracleSyntaxValidationTest {
     private static final String ORA_INSUFFICIENT_PRIVILEGES = "ORA-01031";
     private static final String ORA_ROLE_NOT_EXIST = "ORA-01919";
     
-    // Oracle error codes that indicate acceptable failures (ONLY privilege/edition issues)
+    // Oracle error codes that indicate acceptable failures (privilege/edition issues + missing symbols)
     private static final Set<String> ACCEPTABLE_ERROR_PREFIXES = Set.of(
+        // Privilege and edition restrictions
         "ORA-01031", // insufficient privileges
         "ORA-28447", // insufficient privilege for ALTER DATABASE DICTIONARY
         "ORA-65040", // operation not allowed from within pluggable database
         "ORA-65090", // operation not allowed on a pluggable database container
         "ORA-65118", // operation affecting a pluggable database cannot be performed from another pluggable database
-        "ORA-38301"  // flashback requires Enterprise Edition
+        "ORA-38301", // flashback requires Enterprise Edition
+        
+        // Missing database objects (symbols) - not syntax errors
+        "ORA-00942", // table or view does not exist
+        "ORA-00904", // invalid identifier (column does not exist)
+        "ORA-01418", // specified index does not exist
+        "ORA-02289", // sequence does not exist
+        "ORA-04043", // object does not exist
+        "ORA-11504", // domain does not exist
+        "ORA-29833", // indextype does not exist
+        "ORA-42421", // property graph does not exist
+        "ORA-04103", // MLE module does not exist
+        "ORA-04105", // MLE environment does not exist
+        "ORA-04098", // trigger is invalid (usually due to missing prerequisite tables)
+        "ORA-00955", // name already used by existing object
+        "ORA-55605", // Incorrect Flashback Archive is specified
+        "ORA-55608", // Default Flashback Archive does not exist
+        "ORA-04007", // MINVALUE cannot exceed current value (sequence constraint issue)
+        "ORA-43929", // Collation issue (configuration-specific)
+        "ORA-01408", // column list already indexed
+        "ORA-65110", // Invalid instance name (pluggable DB issue)
+        "ORA-02511", // shard DDL is disabled (configuration-specific)
+        "ORA-12003", // materialized view does not exist
+        "ORA-11520", // sub-domain not found
+        "ORA-23292"  // constraint does not exist
     );
 
     @BeforeAll
@@ -330,17 +355,15 @@ public class OracleSyntaxValidationTest {
      * Split SQL file content into individual statements
      * Handles:
      * - Semicolon-terminated statements
-     * - Slash-terminated statements (PL/SQL blocks, MLE modules)
-     * - Does not split within JavaScript blocks (MLE) or PL/SQL blocks
+     * - Slash-terminated statements (PL/SQL blocks, MLE modules, triggers, procedures, etc.)
+     * - Does not split within JavaScript blocks (MLE) or compound PL/SQL constructs
      */
     private List<String> splitSqlStatements(String content) {
         List<String> statements = new ArrayList<>();
         StringBuilder currentStatement = new StringBuilder();
         boolean inComment = false;
-        boolean inString = false;
         boolean inJavaScriptBlock = false;
-        boolean inPlSqlBlock = false;
-        int plsqlDepth = 0; // Track nested BEGIN/END blocks
+        boolean inSlashTerminatedBlock = false; // For CREATE TRIGGER, PROCEDURE, FUNCTION, etc.
         
         String[] lines = content.split("\n");
         for (String line : lines) {
@@ -375,33 +398,31 @@ public class OracleSyntaxValidationTest {
             // Detect JavaScript blocks in MLE modules
             if (upperLine.contains("LANGUAGE") && upperLine.contains("JAVASCRIPT") && upperLine.contains("AS")) {
                 inJavaScriptBlock = true;
+                inSlashTerminatedBlock = true;
             }
             
-            // Detect PL/SQL blocks
-            if (upperLine.startsWith("BEGIN") || upperLine.startsWith("DECLARE")) {
-                inPlSqlBlock = true;
-                plsqlDepth = 1;
-            } else if (inPlSqlBlock) {
-                // Count BEGIN/END nesting
-                if (upperLine.contains("BEGIN")) {
-                    plsqlDepth++;
+            // Detect CREATE statements that need slash terminator
+            if (upperLine.startsWith("CREATE") || upperLine.startsWith("DECLARE")) {
+                // Check if this is a CREATE statement that will have a PL/SQL block
+                if (upperLine.contains("TRIGGER") || upperLine.contains("PROCEDURE") || 
+                    upperLine.contains("FUNCTION") || upperLine.contains("PACKAGE") || 
+                    upperLine.contains("TYPE BODY") || upperLine.startsWith("DECLARE")) {
+                    inSlashTerminatedBlock = true;
                 }
-                if (upperLine.contains("END;") || upperLine.equals("END")) {
-                    plsqlDepth--;
-                    if (plsqlDepth == 0) {
-                        inPlSqlBlock = false;
-                    }
-                }
+            }
+            
+            // Check for anonymous PL/SQL blocks (BEGIN without CREATE)
+            if (upperLine.startsWith("BEGIN") && currentStatement.length() == 0) {
+                inSlashTerminatedBlock = true;
             }
             
             currentStatement.append(line).append("\n");
             
             // Check for statement terminator
-            // 1. Slash on its own line terminates JavaScript blocks and PL/SQL blocks
+            // 1. Slash on its own line terminates slash-terminated blocks
             if (trimmedLine.equals("/")) {
                 inJavaScriptBlock = false;
-                inPlSqlBlock = false;
-                plsqlDepth = 0;
+                inSlashTerminatedBlock = false;
                 String stmt = currentStatement.toString().trim();
                 if (!stmt.isEmpty() && !stmt.equals("/")) {
                     // Remove trailing slash
@@ -412,8 +433,8 @@ public class OracleSyntaxValidationTest {
                 }
                 currentStatement = new StringBuilder();
             }
-            // 2. Semicolon terminates regular SQL statements (but not within JS/PL SQL blocks)
-            else if (trimmedLine.endsWith(";") && !inJavaScriptBlock && !inPlSqlBlock) {
+            // 2. Semicolon terminates regular SQL statements (not in JS blocks or slash-terminated blocks)
+            else if (trimmedLine.endsWith(";") && !inJavaScriptBlock && !inSlashTerminatedBlock) {
                 String stmt = currentStatement.toString().trim();
                 if (!stmt.isEmpty()) {
                     // Remove trailing semicolon
