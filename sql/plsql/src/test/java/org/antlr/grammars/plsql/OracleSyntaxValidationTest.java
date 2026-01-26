@@ -54,7 +54,9 @@ public class OracleSyntaxValidationTest {
         // Missing database objects (symbols) - not syntax errors
         "ORA-00942", // table or view does not exist
         "ORA-00904", // invalid identifier (column does not exist)
+        "ORA-00959", // tablespace does not exist
         "ORA-01418", // specified index does not exist
+        "ORA-01917", // user or role does not exist
         "ORA-02289", // sequence does not exist
         "ORA-04043", // object does not exist
         "ORA-11504", // domain does not exist
