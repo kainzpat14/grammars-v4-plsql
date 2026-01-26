@@ -77,7 +77,9 @@ public class OracleSyntaxValidationTest {
         "ORA-11520", // sub-domain not found
         "ORA-23292", // constraint does not exist
         "ORA-24344", // compilation error (triggers/procedures with missing objects/columns)
-        "ORA-06550"  // PL/SQL compilation error (missing objects/columns in PL/SQL blocks)
+        "ORA-06550", // PL/SQL compilation error (missing objects/columns in PL/SQL blocks)
+        "ORA-14016", // underlying table must be partitioned for LOCAL index
+        "ORA-14021"  // MAXVALUE must be specified for partition columns
     );
 
     @BeforeAll
