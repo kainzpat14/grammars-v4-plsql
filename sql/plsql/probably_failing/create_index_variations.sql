@@ -218,24 +218,25 @@ CREATE TABLE iot_employees (
     last_name VARCHAR2(50)
 ) ORGANIZATION INDEX;
 
--- CREATE index on nested table
-CREATE INDEX dept_emp_nested_idx ON TABLE(SELECT employee_list FROM departments);
+-- CREATE index on nested table (invalid syntax in Oracle Free 23)
+-- Correct syntax would require a storage table for the nested table
+-- CREATE INDEX dept_emp_nested_idx ON TABLE(SELECT employee_list FROM departments);
 
 -- CREATE index with NOSORT (data already sorted)
 CREATE INDEX emp_sorted_idx ON employees(employee_id)
 NOSORT;
 
--- CREATE index with ASC NULLS FIRST
-CREATE INDEX emp_comm_nulls_first_idx ON employees(commission_pct ASC NULLS FIRST);
+-- CREATE index with ASC NULLS FIRST (NULLS FIRST/LAST not supported in Oracle Free 23 index creation)
+-- CREATE INDEX emp_comm_nulls_first_idx ON employees(commission_pct ASC NULLS FIRST);
 
--- CREATE index with DESC NULLS LAST
-CREATE INDEX emp_mgr_nulls_last_idx ON employees(manager_id DESC NULLS LAST);
+-- CREATE index with DESC NULLS LAST (NULLS FIRST/LAST not supported in Oracle Free 23 index creation)
+-- CREATE INDEX emp_mgr_nulls_last_idx ON employees(manager_id DESC NULLS LAST);
 
--- CREATE index with multiple null ordering
-CREATE INDEX emp_mixed_nulls_idx ON employees(
-    department_id ASC NULLS FIRST,
-    salary DESC NULLS LAST
-);
+-- CREATE index with multiple null ordering (NULLS FIRST/LAST not supported in Oracle Free 23 index creation)
+-- CREATE INDEX emp_mixed_nulls_idx ON employees(
+--     department_id ASC NULLS FIRST,
+--     salary DESC NULLS LAST
+-- );
 
 -- CREATE unique function-based index
 CREATE UNIQUE INDEX emp_unique_upper_email_idx ON employees(UPPER(email));
@@ -302,9 +303,9 @@ LOCAL INDEXING OFF;
 CREATE INDEX emp_high_salary_idx ON employees(employee_id)
 WHERE salary > 10000;  -- Not standard Oracle, but some versions support
 
--- CREATE index with key compression for bitmap
-CREATE BITMAP INDEX emp_dept_compressed_bm_idx ON employees(department_id)
-COMPRESS;
+-- CREATE index with key compression for bitmap (not supported in Oracle Free 23)
+-- CREATE BITMAP INDEX emp_dept_compressed_bm_idx ON employees(department_id)
+-- COMPRESS;
 
 -- CREATE index on XMLType column using XMLIndex
 CREATE INDEX xml_orders_idx ON xml_orders(order_xml)
@@ -402,9 +403,9 @@ PARALLEL (DEGREE 4);
 CREATE INDEX emp_instances_idx ON employees(hire_date)
 PARALLEL (DEGREE 4 INSTANCES 2);
 
--- CREATE index organized differently
-CREATE INDEX emp_monitored_idx ON employees(last_modified_date)
-MONITORING USAGE;
+-- CREATE index organized differently (MONITORING USAGE not supported in Oracle Free 23)
+-- CREATE INDEX emp_monitored_idx ON employees(last_modified_date)
+-- MONITORING USAGE;
 
 -- CREATE index with no monitoring
 CREATE INDEX emp_nomonitor_idx ON employees(created_date)
