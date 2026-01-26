@@ -416,7 +416,7 @@ public class OracleSyntaxValidationTest {
             }
             
             // Check for anonymous PL/SQL blocks (BEGIN without CREATE)
-            if (upperLine.startsWith("BEGIN") && currentStatement.length() == 0) {
+            if (upperLine.startsWith("BEGIN") && currentStatement.toString().trim().isEmpty()) {
                 inSlashTerminatedBlock = true;
             }
             
