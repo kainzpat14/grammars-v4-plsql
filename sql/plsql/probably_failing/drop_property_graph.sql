@@ -11,5 +11,6 @@ DROP PROPERTY GRAPH IF EXISTS social_network;
 -- Drop with schema qualification
 DROP PROPERTY GRAPH myschema.company_graph;
 
--- Drop with cascade
-DROP PROPERTY GRAPH network_graph CASCADE;
+-- Drop with cascade (CASCADE not supported for property graphs in Oracle 23)
+-- DROP PROPERTY GRAPH network_graph CASCADE;
+DROP PROPERTY GRAPH network_graph;

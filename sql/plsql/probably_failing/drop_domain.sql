@@ -8,8 +8,8 @@ DROP DOMAIN email_domain;
 -- Drop if exists
 DROP DOMAIN IF EXISTS status_code;
 
--- Drop with CASCADE
-DROP DOMAIN year_of_birth CASCADE;
+-- Drop with CASCADE (CASCADE not supported for DROP DOMAIN)
+DROP DOMAIN year_of_birth;
 
 -- Drop from another schema
 DROP DOMAIN hr.department_code;

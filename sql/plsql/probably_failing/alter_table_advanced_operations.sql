@@ -74,14 +74,14 @@ ALTER TABLE hot_table NOCOMPRESS;
 ALTER TABLE small_table MOVE ORGANIZATION INDEX;
 
 -- Add SUPPLEMENTAL LOG DATA variations
-ALTER TABLE audit_table ADD SUPPLEMENTAL LOG DATA;
+ALTER TABLE audit_table ADD SUPPLEMENTAL LOG GROUP log_group_1 (employee_id, name) ALWAYS;
 ALTER TABLE audit_table ADD SUPPLEMENTAL LOG DATA (ALL) COLUMNS;
 ALTER TABLE audit_table ADD SUPPLEMENTAL LOG DATA (PRIMARY KEY) COLUMNS;
 ALTER TABLE audit_table ADD SUPPLEMENTAL LOG DATA (UNIQUE) COLUMNS;
 ALTER TABLE audit_table ADD SUPPLEMENTAL LOG DATA (FOREIGN KEY) COLUMNS;
 
 -- Drop SUPPLEMENTAL LOG DATA
-ALTER TABLE audit_table DROP SUPPLEMENTAL LOG DATA;
+ALTER TABLE audit_table DROP SUPPLEMENTAL LOG GROUP log_group_1;
 
 -- Set UNUSED column (marks for later drop)
 ALTER TABLE old_table SET UNUSED (obsolete_col1);
@@ -125,8 +125,9 @@ ALTER TABLE orders ADD CONSTRAINT check_order_total
     CHECK (total >= 0)
     DEFERRABLE INITIALLY DEFERRED;
 
--- Modify constraint state
-ALTER TABLE orders MODIFY CONSTRAINT check_order_total NOT DEFERRABLE;
+-- Modify constraint state - Cannot change deferability with MODIFY CONSTRAINT
+-- Must drop and recreate to change deferability
+-- ALTER TABLE orders MODIFY CONSTRAINT check_order_total NOT DEFERRABLE;
 
 -- Enable/Disable row movement (required for various operations)
 ALTER TABLE partitioned_table ENABLE ROW MOVEMENT;
@@ -159,9 +160,12 @@ ALTER TABLE small_records NOMINIMIZE RECORDS_PER_BLOCK;
 -- Rename constraint
 ALTER TABLE employees RENAME CONSTRAINT old_name TO new_name;
 
--- Modify constraint to add/drop CASCADE
-ALTER TABLE child_table MODIFY CONSTRAINT fk_parent ON DELETE CASCADE;
-ALTER TABLE child_table MODIFY CONSTRAINT fk_parent ON DELETE SET NULL;
+-- Modify constraint - to change ON DELETE, need to drop and recreate
+-- ALTER TABLE child_table MODIFY CONSTRAINT fk_parent ON DELETE CASCADE;
+-- ALTER TABLE child_table MODIFY CONSTRAINT fk_parent ON DELETE SET NULL;
+-- Instead, use DROP and ADD:
+ALTER TABLE child_table DROP CONSTRAINT fk_parent;
+ALTER TABLE child_table ADD CONSTRAINT fk_parent FOREIGN KEY (parent_id) REFERENCES parent_table(id) ON DELETE CASCADE;
 
 -- Add column with domain (Oracle 23ai)
 ALTER TABLE employees ADD (

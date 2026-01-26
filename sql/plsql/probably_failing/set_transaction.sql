@@ -14,11 +14,15 @@ SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 -- Set transaction isolation level to read committed
 SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
 
--- Combined: read-only with serializable
-SET TRANSACTION READ ONLY ISOLATION LEVEL SERIALIZABLE;
+-- Combined: read-only with serializable (use multi-line format)
+SET TRANSACTION 
+  READ ONLY
+  ISOLATION LEVEL SERIALIZABLE;
 
--- Combined: read-write with read committed
-SET TRANSACTION READ WRITE ISOLATION LEVEL READ COMMITTED;
+-- Combined: read-write with read committed (use multi-line format)
+SET TRANSACTION 
+  READ WRITE
+  ISOLATION LEVEL READ COMMITTED;
 
 -- Set transaction with name
 SET TRANSACTION NAME 'large_update_transaction';
