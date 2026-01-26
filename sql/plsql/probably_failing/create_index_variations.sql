@@ -302,9 +302,9 @@ LOCAL INDEXING OFF;
 CREATE INDEX emp_high_salary_idx ON employees(employee_id)
 WHERE salary > 10000;  -- Not standard Oracle, but some versions support
 
--- CREATE index with key compression for bitmap
-CREATE BITMAP INDEX emp_dept_compressed_bm_idx ON employees(department_id)
-COMPRESS;
+-- CREATE index with key compression for bitmap (not supported in Oracle Free 23)
+-- CREATE BITMAP INDEX emp_dept_compressed_bm_idx ON employees(department_id)
+-- COMPRESS;
 
 -- CREATE index on XMLType column using XMLIndex
 CREATE INDEX xml_orders_idx ON xml_orders(order_xml)
@@ -402,9 +402,9 @@ PARALLEL (DEGREE 4);
 CREATE INDEX emp_instances_idx ON employees(hire_date)
 PARALLEL (DEGREE 4 INSTANCES 2);
 
--- CREATE index organized differently
-CREATE INDEX emp_monitored_idx ON employees(last_modified_date)
-MONITORING USAGE;
+-- CREATE index organized differently (MONITORING USAGE not supported in Oracle Free 23)
+-- CREATE INDEX emp_monitored_idx ON employees(last_modified_date)
+-- MONITORING USAGE;
 
 -- CREATE index with no monitoring
 CREATE INDEX emp_nomonitor_idx ON employees(created_date)

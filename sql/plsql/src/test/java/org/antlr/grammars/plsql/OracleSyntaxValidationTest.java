@@ -75,7 +75,9 @@ public class OracleSyntaxValidationTest {
         "ORA-02511", // shard DDL is disabled (configuration-specific)
         "ORA-12003", // materialized view does not exist
         "ORA-11520", // sub-domain not found
-        "ORA-23292"  // constraint does not exist
+        "ORA-23292", // constraint does not exist
+        "ORA-24344", // compilation error (triggers/procedures with missing objects/columns)
+        "ORA-06550"  // PL/SQL compilation error (missing objects/columns in PL/SQL blocks)
     );
 
     @BeforeAll

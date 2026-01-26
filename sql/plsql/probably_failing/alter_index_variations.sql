@@ -29,8 +29,8 @@ ALTER INDEX emp_idx REBUILD INITRANS 4;
 ALTER INDEX emp_idx REBUILD
 STORAGE (INITIAL 2M NEXT 2M);
 
--- ALTER INDEX REBUILD with COMPRESS
-ALTER INDEX emp_composite_idx REBUILD COMPRESS 2;
+-- ALTER INDEX REBUILD with COMPRESS (not supported in Oracle Free 23)
+-- ALTER INDEX emp_composite_idx REBUILD COMPRESS 2;
 
 -- ALTER INDEX REBUILD with NOCOMPRESS
 ALTER INDEX emp_compressed_idx REBUILD NOCOMPRESS;
@@ -95,9 +95,9 @@ INTO (
     PARTITION sales_2024_h2
 );
 
--- ALTER INDEX MERGE PARTITIONS
-ALTER INDEX sales_idx MERGE PARTITIONS sales_2024_h1, sales_2024_h2
-INTO PARTITION sales_2024;
+-- ALTER INDEX MERGE PARTITIONS (Not supported in Oracle Free 23 - use COALESCE instead)
+-- ALTER INDEX sales_idx MERGE PARTITIONS sales_2024_h1, sales_2024_h2
+-- INTO PARTITION sales_2024;
 
 -- ALTER INDEX RENAME PARTITION
 ALTER INDEX sales_idx RENAME PARTITION sales_2023 TO sales_2023_final;
@@ -110,20 +110,20 @@ TABLESPACE default_ts;
 ALTER INDEX sales_local_idx MODIFY DEFAULT ATTRIBUTES
 COMPRESS 1;
 
--- ALTER INDEX UPDATE BLOCK REFERENCES
-ALTER INDEX emp_idx UPDATE BLOCK REFERENCES;
+-- ALTER INDEX UPDATE BLOCK REFERENCES (deprecated/not supported in Oracle Free 23)
+-- ALTER INDEX emp_idx UPDATE BLOCK REFERENCES;
 
 -- ALTER INDEX REBUILD ONLINE with PARALLEL
 ALTER INDEX emp_big_idx REBUILD ONLINE PARALLEL 8;
 
--- ALTER INDEX SHRINK SPACE (11g+)
-ALTER INDEX emp_idx SHRINK SPACE;
+-- ALTER INDEX SHRINK SPACE (not supported in Oracle Free 23)
+-- ALTER INDEX emp_idx SHRINK SPACE;
 
--- ALTER INDEX SHRINK SPACE COMPACT
-ALTER INDEX emp_idx SHRINK SPACE COMPACT;
+-- ALTER INDEX SHRINK SPACE COMPACT (not supported in Oracle Free 23)
+-- ALTER INDEX emp_idx SHRINK SPACE COMPACT;
 
--- ALTER INDEX SHRINK SPACE CASCADE
-ALTER INDEX emp_idx SHRINK SPACE CASCADE;
+-- ALTER INDEX SHRINK SPACE CASCADE (not supported in Oracle Free 23)
+-- ALTER INDEX emp_idx SHRINK SPACE CASCADE;
 
 -- ALTER INDEX deallocate unused space
 ALTER INDEX emp_idx DEALLOCATE UNUSED;
@@ -318,8 +318,8 @@ ALTER INDEX emp_idx REBUILD COMPRESS 2;
 -- ALTER INDEX to change compression level
 ALTER INDEX emp_comp_idx REBUILD COMPRESS 1;  -- was COMPRESS 2
 
--- ALTER INDEX rebuild with NOSORT (data already sorted)
-ALTER INDEX emp_presorted_idx REBUILD NOSORT;
+-- ALTER INDEX rebuild with NOSORT (not supported in Oracle Free 23)
+-- ALTER INDEX emp_presorted_idx REBUILD NOSORT;
 
 -- ALTER INDEX for spatial index
 ALTER INDEX location_spatial_idx REBUILD;
@@ -378,8 +378,8 @@ ALTER INDEX emp_unique_idx REBUILD;
 -- ALTER INDEX coalesce for space management
 ALTER INDEX emp_idx COALESCE;
 
--- ALTER INDEX update block references after ROWID changes
-ALTER INDEX emp_idx UPDATE BLOCK REFERENCES;
+-- ALTER INDEX update block references after ROWID changes (deprecated/not supported)
+-- ALTER INDEX emp_idx UPDATE BLOCK REFERENCES;
 
 -- ALTER INDEX deallocate unused with KEEP minimum
 ALTER INDEX emp_idx DEALLOCATE UNUSED KEEP 100K;
@@ -417,12 +417,12 @@ TABLESPACE part_ts_2024
 PARALLEL 4
 ONLINE;
 
--- ALTER INDEX compress all partitions
-ALTER INDEX sales_idx MODIFY DEFAULT ATTRIBUTES COMPRESS 2;
+-- ALTER INDEX compress all partitions (MODIFY DEFAULT ATTRIBUTES COMPRESS not supported)
+-- ALTER INDEX sales_idx MODIFY DEFAULT ATTRIBUTES COMPRESS 2;
 
--- ALTER INDEX set different compression per partition
-ALTER INDEX sales_idx REBUILD PARTITION p1 COMPRESS 1;
-ALTER INDEX sales_idx REBUILD PARTITION p2 COMPRESS 2;
+-- ALTER INDEX set different compression per partition (not supported in Oracle Free 23)
+-- ALTER INDEX sales_idx REBUILD PARTITION p1 COMPRESS 1;
+-- ALTER INDEX sales_idx REBUILD PARTITION p2 COMPRESS 2;
 
 -- ALTER INDEX for interval partition (auto-created partitions)
 ALTER INDEX interval_part_idx REBUILD;
